@@ -21,7 +21,8 @@ export enum role
 
 export global status
 {
-    in-out property <view> currentView: view.authorization;
+    in property <view> currentView: view.authorization;
+    in-out property <string> auth_status_message: ""; // New property
     in-out property <role> currentUserRole: role.admin;
     in-out property <bool> adminPanelEnabled: false;
 }

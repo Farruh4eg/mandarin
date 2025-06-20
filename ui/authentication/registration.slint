@@ -7,7 +7,7 @@ export component registration inherits VerticalLayout
     private property <bool> passwordVisible: false;
 
     callback authorizationClicked <=> authorizationButton.clicked;
-    callback registrationClicked <=> registrationButton.clicked;
+    callback performRegistration(string, string);
     callback exitClicked <=> exitButton.clicked;
 
     alignment: center;
@@ -66,6 +66,7 @@ export component registration inherits VerticalLayout
                 color: white;
                 font-family: "Consolas";
                 font-size: 17px;
+                edited => { status.auth_status_message = ""; }
             }
         }
 
@@ -109,10 +110,20 @@ export component registration inherits VerticalLayout
                 color: white;
                 font-family: "Consolas";
                 font-size: 17px;
+                edited => { status.auth_status_message = ""; }
             }
         }
 
         Rectangle { height: 1px; background: #FFFFFF; opacity: 0.7; }
+    }
+
+    Text {
+        text: status.auth_status_message;
+        horizontal-alignment: center;
+        color: #FFCCCC; // Or choose color dynamically
+        font-family: "Consolas";
+        font-size: 14px;
+        visible: status.auth_status_message != "";
     }
 
     HorizontalLayout
@@ -137,6 +148,7 @@ export component registration inherits VerticalLayout
 
     registrationButton := TouchArea
     {
+        clicked => { root.performRegistration(nickNameInput.text, passwordInput.text); }
         width: 100%;
         min-height: 50px;
 

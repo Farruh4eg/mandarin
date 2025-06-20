@@ -7,7 +7,7 @@ export component authorization inherits VerticalLayout
     private property <bool> passwordVisible: false;
 
     callback registrationClicked <=> registrationButton.clicked;
-    callback loginClicked(string);
+    callback loginClicked(string, string);
     callback exitClicked <=> exitButton.clicked;
 
     alignment: center;
@@ -66,6 +66,7 @@ export component authorization inherits VerticalLayout
                 color: white;
                 font-family: "Consolas";
                 font-size: 17px;
+                edited => { status.auth_status_message = ""; }
             }
         }
 
@@ -109,10 +110,20 @@ export component authorization inherits VerticalLayout
                 color: white;
                 font-family: "Consolas";
                 font-size: 17px;
+                edited => { status.auth_status_message = ""; }
             }
         }
 
         Rectangle { height: 1px; background: #FFFFFF; opacity: 0.7; }
+    }
+
+    Text {
+        text: status.auth_status_message;
+        horizontal-alignment: center;
+        color: #FFCCCC; // A light red for errors, or choose dynamically
+        font-family: "Consolas";
+        font-size: 14px;
+        visible: status.auth_status_message != "";
     }
 
     HorizontalLayout
@@ -157,7 +168,7 @@ export component authorization inherits VerticalLayout
             font-weight: 600;
         }
 
-        clicked => { root.loginClicked(nickNameInput.text) }
+        clicked => { root.loginClicked(nickNameInput.text, passwordInput.text) }
     }
 
     Rectangle { background: transparent; }

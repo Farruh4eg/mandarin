@@ -6,7 +6,8 @@ import { registration } from "./registration.slint";
 
 export component authentication inherits Window
 {
-    callback authenticate(string);
+    callback authenticate(string, string);
+    callback register(string, string);
     callback exit();
 
     title: "Mandarin Heroes";
@@ -17,7 +18,7 @@ export component authentication inherits Window
 
     if status.currentView == view.authorization : authorization
     {
-        loginClicked(nickName) => { root.authenticate(nickName); }
+        loginClicked(nickName, password) => { root.authenticate(nickName, password); }
 
         registrationClicked =>
         {
@@ -29,6 +30,7 @@ export component authentication inherits Window
 
     if status.currentView == view.registration: registration
     {
+        performRegistration(nickName, password) => { root.register(nickName, password); }
         authorizationClicked =>
         {
             status.currentView = view.authorization;
