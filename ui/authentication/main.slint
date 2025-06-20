@@ -6,7 +6,7 @@ import { registration } from "./registration.slint";
 
 export component authentication inherits Window
 {
-    property <string> status_message;
+    in-out property <string> status_message;
     callback authenticate(string, string);
     callback register(string, string);
     callback exit();
