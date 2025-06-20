@@ -1,0 +1,27 @@
+// global.slint
+
+export enum view
+{
+    authorization,
+    registration,
+    profile,
+    hieroglyphs,
+    phrases,
+    grammar,
+    tests,
+    achievements,
+    rating
+}
+
+export enum role
+{
+    user,
+    admin
+}
+
+export global status
+{
+    in-out property <view> currentView: view.authorization;
+    in-out property <role> currentUserRole: role.admin;
+    in-out property <bool> adminPanelEnabled: false;
+}

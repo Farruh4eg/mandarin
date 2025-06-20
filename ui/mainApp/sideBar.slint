@@ -1,0 +1,144 @@
+// mainApp/sideBar.slint
+
+import { view, status, role } from "../global.slint";
+import { Switch } from "std-widgets.slint";
+import { sideBarButton } from "./sideBarButton.slint";
+
+export component sideBar inherits Rectangle
+{
+    in-out property <string> nickName;
+
+    callback profileClicked <=> profileButton.clicked;
+    callback hieroglyphsClicked <=> hieroglyphsButton.clicked;
+    callback phrasesClicked <=> phrasesButton.clicked;
+    callback grammarClicked <=> grammarButton.clicked;
+    callback testsClicked <=> testsButton.clicked;
+    callback achievementsClicked <=> achievementsButton.clicked;
+    callback ratingClicked <=> ratingButton.clicked;
+    callback exitClicked <=> exitButton.clicked;
+
+    width: 280px;
+    background: #55499F;
+
+    VerticalLayout
+    {
+        padding: 20px;
+        spacing: 15px;
+
+        Rectangle { height: 5px; background: transparent; }
+
+        VerticalLayout
+        {
+            alignment: center;
+            spacing: 5px;
+
+            HorizontalLayout
+            {
+                Rectangle { background: transparent; }
+                Image
+                {
+                    source: @image-url("../../resources/icons/mainApp/interface/user.png");
+                    width: 80px;
+                    height: 80px;
+                }
+                Rectangle { background: transparent; }
+            }
+
+            HorizontalLayout
+            {
+                Rectangle { background: transparent; }
+
+                profileButton := TouchArea
+                {
+                    Text
+                    {
+                        text: nickName;
+                        color: profileButton.has-hover ? black : white;
+                        font-family: "Consolas";
+                        font-size: 16px;
+                        opacity: 0.8;
+                    }
+                }
+
+                Rectangle { background: transparent; }
+            }
+        }
+
+        Rectangle { height: 5px; background: transparent; }
+
+        VerticalLayout
+        {
+            spacing: 10px;
+
+            hieroglyphsButton := sideBarButton
+            {
+                text: "Иероглифы";
+                icon: @image-url("../../resources/icons/mainApp/interface/hieroglyphs.png");
+                active: status.currentView == view.hieroglyphs;
+            }
+
+            phrasesButton := sideBarButton
+            {
+                text: "Фразы";
+                icon: @image-url("../../resources/icons/mainApp/interface/phrases.png");
+                active: status.currentView == view.phrases;
+            }
+
+            grammarButton := sideBarButton
+            {
+                text: "Грамматика";
+                icon: @image-url("../../resources/icons/mainApp/interface/grammar.png");
+                active: status.currentView == view.grammar;
+            }
+
+            testsButton := sideBarButton
+            {
+                text: "Тесты";
+                icon: @image-url("../../resources/icons/mainApp/interface/tests.png");
+                active: status.currentView == view.tests;
+            }
+
+            achievementsButton := sideBarButton
+            {
+                text: "Достижения";
+                icon: @image-url("../../resources/icons/mainApp/interface/achievements.png");
+                active: status.currentView == view.achievements;
+            }
+
+            ratingButton := sideBarButton
+            {
+                text: "Рейтинг";
+                icon: @image-url("../../resources/icons/mainApp/interface/users.png");
+                active: status.currentView == view.rating;
+            }
+        }
+
+        Rectangle { background: transparent; }
+
+        VerticalLayout
+        {
+            alignment: center;
+            spacing: 10px;
+            visible: status.currentUserRole == role.admin;
+
+            Text
+            {
+                text: "Панель администратора";
+                color: white;
+                font-family: "Consolas";
+                font-size: 16px;
+            }
+
+            adminSwitch := Switch
+            {
+                checked <=> status.adminPanelEnabled;
+            }
+        }
+
+        exitButton := sideBarButton
+        {
+            text: "Выход";
+            icon: @image-url("../../resources/icons/mainApp/interface/exit.png");
+        }
+    }
+}

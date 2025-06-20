@@ -1,0 +1,185 @@
+// authentication/authorization.slint
+
+import { view, status } from "../global.slint";
+
+export component authorization inherits VerticalLayout
+{
+    private property <bool> passwordVisible: false;
+
+    callback registrationClicked <=> registrationButton.clicked;
+    callback loginClicked(string);
+    callback exitClicked <=> exitButton.clicked;
+
+    alignment: center;
+    padding: 35px;
+    spacing: 25px;
+
+    HorizontalLayout
+    {
+        Rectangle { background: transparent; }
+
+        Image
+        {
+            source: @image-url("../../resources/icons/logo.png");
+            width: 150px;
+            height: 150px;
+        }
+
+        Rectangle { background: transparent; }
+    }
+
+    Rectangle { background: transparent; }
+
+    Text
+    {
+        text: "Авторизация";
+        horizontal-alignment: center;
+        color: white;
+        font-family: "Consolas";
+        font-size: 32px;
+        font-weight: 700;
+    }
+
+    Rectangle { background: transparent; }
+
+    VerticalLayout
+    {
+        width: 100%;
+        spacing: 8px;
+
+        HorizontalLayout
+        {
+            spacing: 15px;
+
+            Image
+            {
+                source: @image-url("../../resources/icons/authentication/profile.png");
+                width: 24px;
+                height: 24px;
+                vertical-alignment: center;
+            }
+
+            nickNameInput := TextInput
+            {
+                width: 100%;
+                vertical-alignment: center;
+                color: white;
+                font-family: "Consolas";
+                font-size: 17px;
+            }
+        }
+
+        Rectangle { height: 1px; background: #FFFFFF; opacity: 0.7; }
+    }
+
+    VerticalLayout
+    {
+        width: 100%;
+        spacing: 8px;
+
+        HorizontalLayout
+        {
+            spacing: 15px;
+
+            passwordIconTouchArea := TouchArea
+            {
+                width: 24px;
+                height: 24px;
+
+                Image
+                {
+                    source: root.passwordVisible ? @image-url("../../resources/icons/authentication/unlock.png") : @image-url("../../resources/icons/authentication/lock.png");
+                    width: 32px;
+                    height: 32px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+
+                clicked =>
+                {
+                    root.passwordVisible = !root.passwordVisible;
+                }
+            }
+
+            passwordInput := TextInput
+            {
+                width: 100%;
+                vertical-alignment: center;
+                input-type: root.passwordVisible ? InputType.text : InputType.password;
+                color: white;
+                font-family: "Consolas";
+                font-size: 17px;
+            }
+        }
+
+        Rectangle { height: 1px; background: #FFFFFF; opacity: 0.7; }
+    }
+
+    HorizontalLayout
+    {
+        width: 100%;
+
+        Rectangle { background: transparent; }
+
+        registrationButton := TouchArea
+        {
+            Text
+            {
+                text: "Регистрация";
+                color: registrationButton.has-hover ? black : white;
+                font-family: "Consolas";
+                font-size: 16px;
+            }
+        }
+    }
+
+    Rectangle { background: transparent; }
+
+    loginButton := TouchArea
+    {
+        width: 100%;
+        min-height: 50px;
+
+        Rectangle
+        {
+            background: loginButton.has-hover ? #E0E0E0 : white;
+            border-radius: 8px;
+        }
+
+        Text
+        {
+            text: "Войти";
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            color: #55499F;
+            font-family: "Consolas";
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        clicked => { root.loginClicked(nickNameInput.text) }
+    }
+
+    Rectangle { background: transparent; }
+
+    HorizontalLayout
+    {
+        width: 100%;
+
+        Rectangle { background: transparent; }
+
+        exitButton := TouchArea
+        {
+            Text
+            {
+                text: "Выйти";
+                color: exitButton.has-hover ? black : white;
+                font-family: "Consolas";
+                font-size: 16px;
+                opacity: 0.8;
+            }
+        }
+
+        Rectangle { background: transparent; }
+    }
+}

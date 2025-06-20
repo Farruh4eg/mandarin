@@ -1,0 +1,44 @@
+// mainApp/sideBarButton.slint
+
+export component sideBarButton inherits TouchArea
+{
+    in-out property <string> text;
+    in-out property <image> icon;
+    in-out property <bool> active: false;
+
+    min-height: 50px;
+
+    Rectangle
+    {
+        background: root.active ? #4A3F8A : (root.has-hover ? #6A5ACD : transparent);
+        border-radius: 8px;
+    }
+
+    HorizontalLayout
+    {
+        padding: 10px;
+
+        Text
+        {
+            text: root.text;
+            vertical-alignment: center;
+            color: white;
+            font-family: "Consolas";
+            font-size: 18px;
+        }
+
+        Rectangle { background: transparent; }
+
+        VerticalLayout
+        {
+            Rectangle { background: transparent; }
+            Image
+            {
+                source: root.icon;
+                width: 26px;
+                height: 26px;
+            }
+            Rectangle { background: transparent; }
+        }
+    }
+}

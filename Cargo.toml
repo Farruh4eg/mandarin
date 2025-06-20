@@ -1,0 +1,12 @@
+[package]
+build = "src/build.rs"
+name = "diploma"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rdev = "0.5.3"
+slint = "1.11.0"
+
+[build-dependencies]
+slint-build = "1.11.0"

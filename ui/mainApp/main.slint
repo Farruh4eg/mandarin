@@ -1,0 +1,174 @@
+// mainApp/main.slint
+
+import { view, status, role } from "../global.slint";
+import { sideBar } from "./sideBar.slint";
+
+export component mainApp inherits Window
+{
+    // TODO: Сюда будет приходить имя пользователя после авторизации
+    in-out property <string> nickName: "nickName";
+
+    callback exit();
+
+    title: "Mandarin Heroes";
+    icon: @image-url("../../resources/icons/panda.png");
+    width: 1280px;
+    height: 720px;
+
+    HorizontalLayout
+    {
+        spacing: 0;
+
+        sideBar
+        {
+            nickName: nickName;
+
+            profileClicked => { status.currentView = view.profile; }
+            hieroglyphsClicked => { status.currentView = view.hieroglyphs; }
+            phrasesClicked => { status.currentView = view.phrases; }
+            grammarClicked => { status.currentView = view.grammar; }
+            testsClicked => { status.currentView = view.tests; }
+            achievementsClicked => { status.currentView = view.achievements; }
+            ratingClicked => { status.currentView = view.rating; }
+            exitClicked => { root.exit(); }
+        }
+
+        Rectangle
+        {
+            background: #C4B0E0;
+
+            if status.currentView == view.profile : Text
+            {
+                if status.adminPanelEnabled == true : Text
+                {
+                    text: "Страница 'Профиль' (Панель Администратора)";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                }
+
+                if status.adminPanelEnabled == false : Text
+                {
+                    text: "Страница 'Профиль'";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                }
+            }
+
+            if status.currentView == view.hieroglyphs : Text
+            {
+                if status.adminPanelEnabled == true : Text
+                {
+                    text: "Страница 'Иероглифы' (Панель Администратора)";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                }
+
+                if status.adminPanelEnabled == false : Text
+                {
+                    text: "Страница 'Иероглифы'";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                }
+            }
+
+            if status.currentView == view.phrases : Text
+            {
+                if status.adminPanelEnabled == true : Text
+                {
+                    text: "Страница 'Фразы' (Панель Администратора)";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                }
+
+                if status.adminPanelEnabled == false : Text
+                {
+                    text: "Страница 'Фразы'";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                }
+            }
+
+            if status.currentView == view.grammar : Text
+            {
+                if status.adminPanelEnabled == true : Text
+                {
+                    text: "Страница 'Грамматика' (Панель Администратора)";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                }
+
+                if status.adminPanelEnabled == false : Text
+                {
+                    text: "Страница 'Грамматика'";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                }
+            }
+
+            if status.currentView == view.tests : Text
+            {
+                if status.adminPanelEnabled == true : Text
+                {
+                    text: "Страница 'Тесты' (Панель Администратора)";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                }
+
+                if status.adminPanelEnabled == false : Text
+                {
+                    text: "Страница 'Тесты'";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                }
+            }
+
+            if status.currentView == view.achievements : Text
+            {
+                if status.adminPanelEnabled == true : Text
+                {
+                    text: "Страница 'Достижения' (Панель Администратора)";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                }
+
+                if status.adminPanelEnabled == false : Text
+                {
+                    text: "Страница 'Достижения'";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                }
+            }
+
+            if status.currentView == view.rating : Text
+            {
+                if status.adminPanelEnabled == true : Text
+                {
+                    text: "Страница 'Рейтинг' (Панель Администратора)";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                }
+
+                if status.adminPanelEnabled == false : Text
+                {
+                    text: "Страница 'Рейтинг'";
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    font-size: 24px;
+                }
+            }
+        }
+    }
+}

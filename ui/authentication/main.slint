@@ -1,0 +1,39 @@
+// authentication/main.slint
+
+import { view, status } from "../global.slint";
+import { authorization } from "./authorization.slint";
+import { registration } from "./registration.slint";
+
+export component authentication inherits Window
+{
+    callback authenticate(string);
+    callback exit();
+
+    title: "Mandarin Heroes";
+    icon: @image-url("../../resources/icons/panda.png");
+    width: 380px;
+    height: 650px;
+    background: #6A5AE0;
+
+    if status.currentView == view.authorization : authorization
+    {
+        loginClicked(nickName) => { root.authenticate(nickName); }
+
+        registrationClicked =>
+        {
+            status.currentView = view.registration;
+        }
+
+        exitClicked => { exit(); }
+    }
+
+    if status.currentView == view.registration: registration
+    {
+        authorizationClicked =>
+        {
+            status.currentView = view.authorization;
+        }
+
+        exitClicked => { exit(); }
+    }
+}
