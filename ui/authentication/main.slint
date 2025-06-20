@@ -6,7 +6,6 @@ import { registration } from "./registration.slint";
 
 export component authentication inherits Window
 {
-    in-out property <string> status_message;
     callback authenticate(string, string);
     callback register(string, string);
     callback exit();
@@ -17,9 +16,10 @@ export component authentication inherits Window
     height: 650px;
     background: #6A5AE0;
 
-    VerticalLayout {
-        padding: 0px; // Adjust padding as needed
-        spacing: 10px; // Adjust spacing as needed
+
+    if status.currentView == view.authorization : authorization
+    {
+        loginClicked(nickName, password) => { root.authenticate(nickName, password); }
 
         if status.currentView == view.authorization : auth_view := authorization {
             loginClicked(nick, pass) => { root.authenticate(nick, pass); }
@@ -39,7 +39,12 @@ export component authentication inherits Window
                 status.currentView = view.authorization;
             }
 
-            exitClicked => { exit(); }
+    if status.currentView == view.registration: registration
+    {
+        performRegistration(nickName, password) => { root.register(nickName, password); }
+        authorizationClicked =>
+        {
+            status.currentView = view.authorization;
         }
 
         Text {

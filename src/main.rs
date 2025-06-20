@@ -23,220 +23,144 @@ use crate::models::{LoginPayload, RegisterPayload, AuthResponse}; // Assuming th
 use serde_json::Value; // For parsing generic error messages
 use std::net::SocketAddr;
 use std::rc::Rc;
-use tokio::net::TcpListener;
-use std::sync::Arc;
 
-// Assuming AppState is in models.rs and handlers are in handlers.rs
-// If not, these paths might need adjustment.
-use crate::models::AppState;
-use crate::handlers::{login_handler, register_handler};
-use crate::status; // Added for the Slint global 'status' type
-
+use once_cell::sync::Lazy;
+use std::collections::HashMap;
+use std::sync::Mutex;
+use bcrypt::{hash, verify, DEFAULT_COST};
 
 slint::include_modules!();
 
-async fn run_axum_server() {
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+static USERS: Lazy<Mutex<HashMap<String, String>>> = Lazy::new(|| {
+    Mutex::new(HashMap::new())
+});
 
-    let pool = match PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&database_url)
-        .await
-    {
-        Ok(pool) => {
-            println!("Successfully connected to the database");
-            pool
-        }
-        Err(err) => {
-            eprintln!("Failed to connect to the database: {:?}", err);
-            std::process::exit(1);
-        }
-    };
+fn handle_signup(nickname: String, password: String) -> bool {
+    // FUTURE: This function will make an HTTP POST request to a /signup endpoint.
+    // For now, it simulates direct user creation.
+    let mut users_map = USERS.lock().unwrap();
 
-    let app_state = Arc::new(AppState { db_pool: pool });
+    if users_map.contains_key(&nickname) {
+        println!("User {} already exists.", nickname);
+        return false;
+    }
 
-    let router = Router::new() // Renamed app to router for clarity with axum::serve call
-        .route("/register", post(register_handler))
-        .route("/login", post(login_handler))
-        .layer(Extension(app_state));
-
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-
-    let listener = match TcpListener::bind(addr).await {
-        Ok(listener) => {
-            println!("Axum server listening on {}", addr);
-            listener
+    match hash(password, DEFAULT_COST) {
+        Ok(hashed_password) => {
+            users_map.insert(nickname.clone(), hashed_password);
+            println!("User {} registered successfully.", nickname);
+            true
         }
         Err(e) => {
-            eprintln!("Failed to bind TCP listener on {}: {}", addr, e);
-            // Consider exiting or a more robust error handling strategy if the server can't start
-            return;
+            println!("Error hashing password for user {}: {:?}", nickname, e);
+            false
         }
-    };
-
-    if let Err(e) = axum::serve(listener, router).await { // Use the renamed router variable
-        eprintln!("Axum server error: {}", e);
     }
 }
 
-#[tokio::main]
-async fn main() {
-    dotenv().ok(); // Load .env file
+fn handle_signin(nickname: String, password: String) -> bool {
+    // FUTURE: This function will make an HTTP POST request to a /signin endpoint.
+    // For now, it simulates direct credential check.
+    let users_map = USERS.lock().unwrap();
 
-    // Spawn the Axum server in a separate Tokio task
-    tokio::spawn(run_axum_server());
+    match users_map.get(&nickname) {
+        Some(stored_hashed_password) => {
+            match verify(password, stored_hashed_password) {
+                Ok(is_valid) => {
+                    if is_valid {
+                        println!("User {} signed in successfully.", nickname);
+                        true
+                    } else {
+                        println!("Invalid password for user {}.", nickname);
+                        false
+                    }
+                }
+                Err(e) => {
+                    println!("Error verifying password for user {}: {:?}", nickname, e);
+                    false
+                }
+            }
+        }
+        None => {
+            println!("User {} not found.", nickname);
+            false
+        }
+    }
+}
 
+fn main()
+{
     let authenticationWindow = authentication::new().unwrap();
     let mainAppWindowHandle: Rc<RefCell<Option<mainApp>>> = Rc::new(RefCell::new(None));
+
+    // Weak reference for callbacks
     let weakAuthentication = authenticationWindow.as_weak();
+
+    // Clone for on_authenticate
     let mainAppWindowHandleClone = mainAppWindowHandle.clone();
+    let auth_weak_for_auth = weakAuthentication.clone(); // Clone weak ref
 
-    authenticationWindow.on_authenticate(move |nickname, password| {
-        let weak_auth_clone = weakAuthentication.clone();
-        let main_app_handle_clone = mainAppWindowHandleClone.clone();
-        let nickname_str: String = nickname.to_string(); // Convert SharedString to String for async block
-        let password_str: String = password.to_string(); // Convert SharedString to String for async block
+    authenticationWindow.on_authenticate(move |nickName, password| {
+        let nickName_str: String = nickName.into();
+        let password_str: String = password.into();
+        if handle_signin(nickName_str.clone(), password_str) {
+            if let Some(app_auth) = auth_weak_for_auth.upgrade() { // Use the cloned weak ref
+                app_auth.global::<status>().set_auth_status_message("".into());
 
-        tokio::spawn(async move {
-            let client = Client::new();
-            let payload = LoginPayload {
-                nickname: nickname_str.clone(), // Clone for logging purposes if needed later
-                password: password_str,
-            };
+                let mainAppWindow = mainApp::new().unwrap();
+                mainAppWindow.set_nickName(nickName.into()); // Use original SharedString or new String
 
-            match client
-                .post("http://127.0.0.1:3000/login")
-                .json(&payload)
-                .send()
-                .await
-            {
-                Ok(response) => {
-                    if response.status().is_success() {
-                        match response.json::<AuthResponse>().await {
-                            Ok(auth_response) => {
-                                println!(
-                                    "Login successful! Access Token: {}, Refresh Token: {}",
-                                    auth_response.access_token, auth_response.refresh_token
-                                );
-                                if let Some(app) = weak_auth_clone.upgrade() {
-                                    // Execute UI transition
-                                    let main_app_window = mainApp::new().unwrap();
-                                    main_app_window.set_nickName(nickname.clone()); // Use original SharedString here
-
-                                    let weak_main_app = main_app_window.as_weak();
-                                    main_app_window.on_exit(move || {
-                                        if let Some(main_app) = weak_main_app.upgrade() {
-                                            main_app.hide().unwrap();
-                                        }
-                                    });
-
-                                    let (screenWidth, screenHeight) = display_size().unwrap();
-                                    let (screenWidth, screenHeight) = (screenWidth as f32, screenHeight as f32);
-                                    let (width, height) = (1280.0, 720.0);
-
-                                    main_app_window.window().set_size(LogicalSize::new(width, height));
-                                    main_app_window.window().set_position(LogicalPosition::new((screenWidth - width) / 2.0, (screenHeight - height) / 2.0));
-
-                                    main_app_window.show().unwrap();
-                                    app.hide().unwrap();
-                                    *main_app_handle_clone.borrow_mut() = Some(main_app_window);
-                                    app.set_status_message("".into()); // Clear message on success
-                                }
-                            }
-                            Err(e) => {
-                                eprintln!("Failed to parse login response: {:?}", e);
-                                if let Some(app) = weak_auth_clone.upgrade() {
-                                    app.set_status_message("Login failed: Invalid server response.".into());
-                                }
-                            }
-                        }
-                    } else {
-                        let status = response.status();
-                        let error_body = response.text().await.unwrap_or_else(|_| "Unknown error, could not retrieve error body".to_string());
-                        eprintln!("Login failed with status: {}. Body: {}", status, error_body);
-                        if let Some(app) = weak_auth_clone.upgrade() {
-                            let error_message = if let Ok(json_error) = serde_json::from_str::<Value>(&error_body) {
-                                json_error.get("error").and_then(Value::as_str)
-                                    .map(|msg| format!("Login failed: {}", msg))
-                                    .unwrap_or_else(|| format!("Login failed: HTTP {}", status))
-                            } else {
-                                format!("Login failed: HTTP {} - {}", status, error_body)
-                            };
-                            app.set_status_message(error_message.into());
-                        }
+                let weakMainApp = mainAppWindow.as_weak();
+                mainAppWindow.on_exit(move || {
+                    if let Some(app_main) = weakMainApp.upgrade() {
+                        app_main.hide().unwrap();
                     }
-                }
-                Err(e) => {
-                    eprintln!("Login request failed: {:?}", e);
-                    if let Some(app) = weak_auth_clone.upgrade() {
-                        app.set_status_message("Login request failed. Check connection.".into());
-                    }
-                }
+                });
+
+                let (screenWidth, screenHeight) = display_size().unwrap();
+                let (screenWidth_f32, screenHeight_f32) = (screenWidth as f32, screenHeight as f32);
+                let (width, height) = (1280.0, 720.0);
+
+                mainAppWindow.window().set_size(LogicalSize::new(width, height));
+                mainAppWindow.window().set_position(LogicalPosition::new((screenWidth_f32 - width) / 2.0, (screenHeight_f32 - height) / 2.0));
+
+                mainAppWindow.show().unwrap();
+                app_auth.hide().unwrap(); // use app_auth here
+                *mainAppWindowHandleClone.borrow_mut() = Some(mainAppWindow);
             }
-        });
+        } else {
+            if let Some(app_auth) = auth_weak_for_auth.upgrade() {
+                app_auth.global::<status>().set_auth_status_message("Login failed. Check nickname or password.".into());
+            }
+            println!("Authentication failed for nickname: {}", nickName); // Keep console log
+        }
     });
 
-    authenticationWindow.on_register(move |nickname, password| {
-        let weak_auth_clone = weakAuthentication.clone();
-        // Convert SharedString to String for async block if they are to be stored or passed around more
-        let nickname_str: String = nickname.to_string();
-        let password_str: String = password.to_string();
+    // Clone weak ref for on_register
+    let auth_weak_for_register = weakAuthentication.clone();
 
-        tokio::spawn(async move {
-            let client = Client::new();
-            let payload = RegisterPayload {
-                nickname: nickname_str.clone(), // Clone for logging
-                password: password_str,
-            };
-
-            match client
-                .post("http://127.0.0.1:3000/register")
-                .json(&payload)
-                .send()
-                .await
-            {
-                Ok(response) => {
-                    if response.status().is_success() { // Typically 201 Created for registration
-                        println!("Registration successful for user: {}", nickname_str);
-                        if let Some(app) = weak_auth_clone.upgrade() {
-                            app.set_status_message("Registration successful! Please login.".into());
-                            // Attempt to switch view to login. This assumes `status` is a global accessible via `app.global()`
-                            // and `view::authorization` is the correct enum path.
-                            // This line might need adjustment based on actual Slint global structure.
-                            app.global::<status>().set_currentView(crate::view::Authorization);
-                            println!("UI: Registration successful, requested switch to login view.");
-                        }
-                    } else {
-                        let status = response.status();
-                        let error_body = response.text().await.unwrap_or_else(|_| "Unknown error, could not retrieve error body".to_string());
-                        eprintln!("Registration failed with status: {}. Body: {}", status, error_body);
-                        if let Some(app) = weak_auth_clone.upgrade() {
-                            let error_message = if let Ok(json_error) = serde_json::from_str::<Value>(&error_body) {
-                                json_error.get("error").and_then(Value::as_str)
-                                    .map(|msg| format!("Registration failed: {}", msg))
-                                    .unwrap_or_else(|| format!("Registration failed: HTTP {}", status))
-                            } else {
-                                format!("Registration failed: HTTP {} - {}", status, error_body)
-                            };
-                            app.set_status_message(error_message.into());
-                        }
-                    }
-                }
-                Err(e) => {
-                    eprintln!("Registration request failed: {:?}", e);
-                    if let Some(app) = weak_auth_clone.upgrade() {
-                        app.set_status_message("Registration request failed. Check connection.".into());
-                    }
-                }
+    authenticationWindow.on_register(move |nickName, password| {
+        let nickName_str: String = nickName.into();
+        let password_str: String = password.into();
+        if handle_signup(nickName_str.clone(), password_str) {
+            if let Some(auth_app) = auth_weak_for_register.upgrade() {
+                auth_app.global::<status>().set_auth_status_message("Registration successful! Please log in.".into());
+                auth_app.global::<status>().set_currentView(view::authorization);
             }
-        });
+            println!("Registration successful for nickname: {}. Please log in.", nickName_str); // Keep console log
+        } else {
+            if let Some(auth_app) = auth_weak_for_register.upgrade() {
+                auth_app.global::<status>().set_auth_status_message("Registration failed. User might already exist.".into());
+            }
+            println!("Registration failed for nickname: {}", nickName_str); // Keep console log
+        }
     });
 
-    let weakAuthenticationExit = weakAuthentication.clone(); // Use the existing weak pointer
+    let weakAuthenticationExit = authenticationWindow.as_weak(); // This can reuse weakAuthentication or be a new clone
 
     authenticationWindow.on_exit(move ||
     {
-        if let Some(app) = weakAuthenticationExit.upgrade()
+        if let Some(app) = weakAuthenticationExit.upgrade() // Ensure this weak ref is valid for this closure
         {
             app.hide().unwrap();
         }
@@ -251,9 +175,4 @@ async fn main() {
     authenticationWindow.show().unwrap();
 
     slint::run_event_loop().unwrap();
-
-    // It's important to ensure that JWT_SECRET and DATABASE_URL environment variables are set
-    // for the application to function correctly.
-    // JWT_SECRET is used for token generation and validation.
-    // DATABASE_URL is used to connect to the PostgreSQL database.
 }
