@@ -13,6 +13,7 @@ use crate::AppState;
 // --- Обработчики аутентификации ---
 
 /// Обработчик регистрации нового пользователя.
+#[axum::debug_handler]
 pub async fn register_handler(
     State(state): State<AppState>,
     Json(payload): Json<RegisterPayload>,
@@ -41,6 +42,7 @@ pub async fn register_handler(
 }
 
 /// Обработчик входа пользователя.
+#[axum::debug_handler]
 pub async fn login_handler(
     State(state): State<AppState>,
     Json(payload): Json<LoginPayload>,
