@@ -6,7 +6,9 @@ import { registration } from "./registration.slint";
 
 export component authentication inherits Window
 {
-    callback authenticate(string);
+    property <string> status_message;
+    callback authenticate(string, string);
+    callback register(string, string);
     callback exit();
 
     title: "Mandarin Heroes";
@@ -15,25 +17,42 @@ export component authentication inherits Window
     height: 650px;
     background: #6A5AE0;
 
-    if status.currentView == view.authorization : authorization
-    {
-        loginClicked(nickName) => { root.authenticate(nickName); }
+    VerticalLayout {
+        padding: 0px; // Adjust padding as needed
+        spacing: 10px; // Adjust spacing as needed
 
-        registrationClicked =>
-        {
-            status.currentView = view.registration;
+        if status.currentView == view.authorization : auth_view := authorization {
+            loginClicked(nick, pass) => { root.authenticate(nick, pass); }
+
+            registrationClicked =>
+            {
+                status.currentView = view.registration;
+            }
+
+            exitClicked => { exit(); }
         }
 
-        exitClicked => { exit(); }
-    }
+        if status.currentView == view.registration: reg_view := registration {
+            performRegistration(nick, pass) => { root.register(nick, pass); }
+            authorizationClicked =>
+            {
+                status.currentView = view.authorization;
+            }
 
-    if status.currentView == view.registration: registration
-    {
-        authorizationClicked =>
-        {
-            status.currentView = view.authorization;
+            exitClicked => { exit(); }
         }
 
-        exitClicked => { exit(); }
+        Text {
+            text: root.status_message;
+            color: white; // Consider making this dynamic for errors (e.g., red)
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            wrap: word-wrap;
+            font-size: 14px; // Adjust as needed
+            padding-left: 15px; // Match other content padding if necessary
+            padding-right: 15px; // Match other content padding if necessary
+            min-height: 20px; // Ensure space even if message is short
+            visible: root.status_message != ""; // Only show if there's a message
+        }
     }
 }

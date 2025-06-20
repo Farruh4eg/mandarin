@@ -7,7 +7,7 @@ export component registration inherits VerticalLayout
     private property <bool> passwordVisible: false;
 
     callback authorizationClicked <=> authorizationButton.clicked;
-    callback registrationClicked <=> registrationButton.clicked;
+    callback performRegistration(string, string);
     callback exitClicked <=> exitButton.clicked;
 
     alignment: center;
@@ -156,6 +156,7 @@ export component registration inherits VerticalLayout
             font-size: 18px;
             font-weight: 600;
         }
+        clicked => { root.performRegistration(nickNameInput.text, passwordInput.text) }
     }
 
     Rectangle { background: transparent; }
