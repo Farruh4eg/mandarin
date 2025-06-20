@@ -35,7 +35,7 @@ impl fmt::Display for UserRole {
 }
 
 
-#[derive(sqlx::FromRow, Debug, Serialize)]
+#[derive(sqlx::FromRow, Debug, Serialize, Deserialize)]
 pub struct User {
     pub id: i32,
     pub nickname: String,
@@ -44,7 +44,7 @@ pub struct User {
     pub role: UserRole,
 }
 
-#[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Hieroglyph {
     pub id: i32,
     pub character: String,
@@ -53,7 +53,7 @@ pub struct Hieroglyph {
     pub example: Option<String>,
 }
 
-#[derive(Serialize, sqlx::FromRow, Debug)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct UserProgress {
     pub id: i32,
     pub user_id: i32,
@@ -63,7 +63,7 @@ pub struct UserProgress {
     pub learned_at: Option<DateTime<Utc>>,
 }
 
-#[derive(Serialize, sqlx::FromRow, Debug)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Achievement {
     pub id: i32,
     pub name: String,
@@ -72,7 +72,7 @@ pub struct Achievement {
     pub icon: Option<String>,
 }
 
-#[derive(Serialize, sqlx::FromRow, Debug)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct UserAchievementDetails {
     pub id: i32,
     pub name: String,
@@ -81,7 +81,7 @@ pub struct UserAchievementDetails {
     pub achieved_at: DateTime<Utc>,
 }
 
-#[derive(Serialize, sqlx::FromRow, Debug)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Test {
     pub id: i32,
     pub name: String,
@@ -89,7 +89,7 @@ pub struct Test {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct TestItem {
     pub id: i32,
     pub test_id: i32,
@@ -99,7 +99,7 @@ pub struct TestItem {
 
 // --- Структуры для request/response ---
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TestDetails {
     pub id: i32,
     pub name: String,
@@ -108,18 +108,18 @@ pub struct TestDetails {
     pub questions: Vec<TestItem>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct AnswerPayload {
     pub question_id: i32,
     pub answer: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct TestSubmissionPayload {
     pub answers: Vec<AnswerPayload>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TestResultResponse {
     pub score: usize,
     pub total_questions: usize,
@@ -127,27 +127,27 @@ pub struct TestResultResponse {
 
 
 /// Полезная нагрузка для регистрации.
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct RegisterPayload {
     pub nickname: String,
     pub password: String,
 }
 
 /// Полезная нагрузка для логина.
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct LoginPayload {
     pub nickname: String,
     pub password: String,
 }
 
 /// Полезная нагрузка для обновления токена.
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct RefreshPayload {
     pub refresh_token: String,
 }
 
 /// Полезная нагрузка для создания иероглифа
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct CreateHieroglyphPayload {
     pub character: String,
     pub pinyin: String,
@@ -156,7 +156,7 @@ pub struct CreateHieroglyphPayload {
 }
 
 /// Полезная нагрузка для отметки контента как выученного.
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct MarkLearnedPayload {
     pub content_type: ContentType,
     pub content_id: i32,
@@ -164,7 +164,7 @@ pub struct MarkLearnedPayload {
 
 
 /// Ответ с токенами.
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AuthResponse {
     pub access_token: String,
     pub refresh_token: String,
@@ -177,4 +177,12 @@ pub struct Claims {
     pub iat: usize,
     pub user_id: i32,
     pub role: UserRole,
+}
+
+// --- Application State ---
+
+/// Global application state shared across handlers.
+#[derive(Debug, Clone)]
+pub struct AppState {
+    pub db_pool: sqlx::PgPool,
 }

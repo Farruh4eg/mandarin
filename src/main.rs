@@ -4,6 +4,10 @@
 
 mod models;
 mod handlers;
+mod auth;
+mod errors;
+
+pub use models::AppState;
 
 use axum::{
     routing::{post, Router},
@@ -26,6 +30,7 @@ use std::sync::Arc;
 // If not, these paths might need adjustment.
 use crate::models::AppState;
 use crate::handlers::{login_handler, register_handler};
+use crate::status; // Added for the Slint global 'status' type
 
 
 slint::include_modules!();
