@@ -2,6 +2,9 @@
 
 #![allow(non_snake_case)]
 
+mod models;
+mod handlers;
+
 use axum::{
     routing::{post, Router},
     Extension,
@@ -16,6 +19,7 @@ use crate::models::{LoginPayload, RegisterPayload, AuthResponse}; // Assuming th
 use serde_json::Value; // For parsing generic error messages
 use std::net::SocketAddr;
 use std::rc::Rc;
+use tokio::net::TcpListener;
 use std::sync::Arc;
 
 // Assuming AppState is in models.rs and handlers are in handlers.rs
@@ -46,19 +50,27 @@ async fn run_axum_server() {
 
     let app_state = Arc::new(AppState { db_pool: pool });
 
-    let app = Router::new()
+    let router = Router::new() // Renamed app to router for clarity with axum::serve call
         .route("/register", post(register_handler))
         .route("/login", post(login_handler))
         .layer(Extension(app_state));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("Axum server listening on {}", addr);
 
-    if let Err(err) = axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-    {
-        eprintln!("Server error: {:?}", err);
+    let listener = match TcpListener::bind(addr).await {
+        Ok(listener) => {
+            println!("Axum server listening on {}", addr);
+            listener
+        }
+        Err(e) => {
+            eprintln!("Failed to bind TCP listener on {}: {}", addr, e);
+            // Consider exiting or a more robust error handling strategy if the server can't start
+            return;
+        }
+    };
+
+    if let Err(e) = axum::serve(listener, router).await { // Use the renamed router variable
+        eprintln!("Axum server error: {}", e);
     }
 }
 
@@ -186,7 +198,7 @@ async fn main() {
                             // Attempt to switch view to login. This assumes `status` is a global accessible via `app.global()`
                             // and `view::authorization` is the correct enum path.
                             // This line might need adjustment based on actual Slint global structure.
-                            app.global::<authentication_status>().set_currentView(crate::authentication::view::authorization);
+                            app.global::<status>().set_currentView(crate::view::Authorization);
                             println!("UI: Registration successful, requested switch to login view.");
                         }
                     } else {
