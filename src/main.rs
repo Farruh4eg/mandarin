@@ -2,10 +2,28 @@
 
 #![allow(non_snake_case)]
 
+mod models;
+mod handlers;
+mod auth;
+mod errors;
+
+pub use models::AppState;
+
+use axum::{
+    routing::{post, Router},
+    Extension,
+};
+use dotenvy::dotenv;
 use rdev::display_size;
-use slint::{ComponentHandle, LogicalPosition, LogicalSize};
+use slint::{ComponentHandle, LogicalPosition, LogicalSize, SharedString};
+use sqlx::postgres::PgPoolOptions;
 use std::cell::RefCell;
+use reqwest::Client;
+use crate::models::{LoginPayload, RegisterPayload, AuthResponse}; // Assuming these are public
+use serde_json::Value; // For parsing generic error messages
+use std::net::SocketAddr;
 use std::rc::Rc;
+
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -157,67 +175,4 @@ fn main()
     authenticationWindow.show().unwrap();
 
     slint::run_event_loop().unwrap();
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*; // To import USERS, handle_signup, handle_signin
-
-    // Test suite for handle_signup
-    // #[test]
-    // fn test_signup_new_user_successful() {
-    //     // 1. Clear USERS or use a fresh instance for testing if possible
-    //     // 2. Call handle_signup with new credentials
-    //     // 3. Assert that it returns true
-    //     // 4. Assert that the user is added to USERS (and password is hashed)
-    // }
-
-    // #[test]
-    // fn test_signup_existing_user_fails() {
-    //     // 1. Signup a user
-    //     // 2. Attempt to signup the same user again
-    //     // 3. Assert that the second call returns false
-    // }
-
-    // Add more placeholder comments for other signup scenarios:
-    // - Password hashing integrity (conceptual: ensure it's not plaintext)
-    // - (Future) Invalid inputs (empty nickname, short password)
-
-    // Test suite for handle_signin
-    // #[test]
-    // fn test_signin_correct_credentials_successful() {
-    //     // 1. Signup a user
-    //     // 2. Call handle_signin with correct credentials
-    //     // 3. Assert that it returns true
-    // }
-
-    // #[test]
-    // fn test_signin_non_existent_user_fails() {
-    //     // 1. Call handle_signin with credentials for a user that hasn't been signed up
-    //     // 2. Assert that it returns false
-    // }
-
-    // #[test]
-    // fn test_signin_incorrect_password_fails() {
-    //     // 1. Signup a user
-    //     // 2. Call handle_signin with the correct nickname but incorrect password
-    //     // 3. Assert that it returns false
-    // }
-
-    // Add more placeholder comments for other signin scenarios:
-    // - Signin after multiple users registered
-
-    // Test suite for bcrypt password verification (direct bcrypt usage)
-    // #[test]
-    // fn test_bcrypt_verify_logic() {
-    //     // let password = "test_password";
-    //     // let hashed_password = bcrypt::hash(password, DEFAULT_COST).unwrap();
-    //     // assert!(bcrypt::verify(password, &hashed_password).unwrap());
-    //     // assert!(!bcrypt::verify("wrong_password", &hashed_password).unwrap());
-    // }
-
-    // Note: For actual tests involving the static USERS map,
-    // careful state management between tests would be needed (e.g., clearing the map,
-    // or running tests that depend on shared state in a controlled sequence, though the latter is not ideal).
-    // Using a dependency-injected user store would be better for testability in a larger app.
 }
